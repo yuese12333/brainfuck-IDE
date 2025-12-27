@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 DEPLOYMENT.md
+更新文档.md
 
 # Editor directories and files
 .vscode/*

@@ -21,6 +21,18 @@ export class BrainfuckInterpreter {
     this.breakpoints = new Set()
     this.hitBreakpoint = false
     
+    // 指令执行统计
+    this.instructionProfile = {
+      '>': 0,
+      '<': 0,
+      '+': 0,
+      '-': 0,
+      '.': 0,
+      ',': 0,
+      '[': 0,
+      ']': 0
+    }
+    
     // 预处理循环跳转表
     this.jumpTable = this.buildJumpTable()
   }
@@ -89,6 +101,11 @@ export class BrainfuckInterpreter {
     this.hitBreakpoint = false
     
     const instruction = this.code[this.instructionPointer]
+    
+    // 统计指令执行次数
+    if (this.instructionProfile[instruction] !== undefined) {
+      this.instructionProfile[instruction]++
+    }
     
     switch (instruction) {
       case '>':

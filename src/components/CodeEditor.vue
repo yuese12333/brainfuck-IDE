@@ -43,7 +43,7 @@
       />
     </div>
     <div class="editor-container">
-      <div class="line-numbers">
+      <div class="line-numbers" ref="lineNumbersRef">
         <div 
           v-for="n in lineCount" 
           :key="n" 
@@ -129,6 +129,7 @@ const emit = defineEmits(['update:modelValue', 'run', 'step', 'stop', 'reset', '
 const localCode = ref(props.modelValue)
 const textareaRef = ref(null)
 const highlightRef = ref(null)
+const lineNumbersRef = ref(null)
 const fileInputRef = ref(null)
 const pressedKey = ref('')
 const checkErrors = ref([])
@@ -252,9 +253,13 @@ const escapeHtml = (text) => {
 const syncScroll = () => {
   const textarea = textareaRef.value
   const highlight = textarea?.previousElementSibling
+  const lineNumbers = lineNumbersRef.value
   if (highlight && textarea) {
     highlight.scrollTop = textarea.scrollTop
     highlight.scrollLeft = textarea.scrollLeft
+    if (lineNumbers) {
+      lineNumbers.scrollTop = textarea.scrollTop
+    }
   }
 }
 
@@ -800,7 +805,14 @@ onBeforeUnmount(() => {
   line-height: 1.5;
   min-width: 45px;
   border-right: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.line-numbers::-webkit-scrollbar {
+  display: none; /* Chrome, Safari和新版Edge */
 }
 
 .line-number {

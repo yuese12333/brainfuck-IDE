@@ -53,6 +53,9 @@
       :is-running="isRunning"
       :is-completed="isCompleted"
       :instructions-per-second="instructionsPerSecond"
+      :instruction-profile="instructionProfile"
+      :keep-stats-on-reset="keepStatsOnReset"
+      @toggle-keep-stats="keepStatsOnReset = !keepStatsOnReset"
     />
   </div>
 </template>
@@ -99,6 +102,10 @@ const instructionsPerSecond = ref(0)
 let lastInstructionCount = 0
 let lastTime = Date.now()
 
+// 指令执行统计
+const instructionProfile = ref({})
+const keepStatsOnReset = ref(false)
+
 // 断点状态（持久化保存）
 const savedBreakpoints = ref(new Set())
 
@@ -119,6 +126,15 @@ const initInterpreter = () => {
   savedBreakpoints.value.forEach(pos => {
     interpreter.addBreakpoint(pos)
   })
+  
+  // 如果保持统计模式启用，恢复之前的统计数据
+  if (keepStatsOnReset.value && instructionProfile.value) {
+    Object.keys(instructionProfile.value).forEach(instr => {
+      if (interpreter.instructionProfile[instr] !== undefined) {
+        interpreter.instructionProfile[instr] = instructionProfile.value[instr] || 0
+      }
+    })
+  }
 }
 
 // 运行代码
@@ -354,6 +370,11 @@ const resetCode = () => {
   pointer.value = 0
   instructionCount.value = 0
   currentPosition.value = 0
+  
+  // 根据设置决定是否清空指令统计
+  if (!keepStatsOnReset.value) {
+    instructionProfile.value = {}
+  }
 }
 
 // 切换断点
@@ -391,6 +412,11 @@ const updateState = () => {
     pointer.value = interpreter.pointer
     instructionCount.value = interpreter.instructionCount
     currentPosition.value = interpreter.instructionPointer
+    
+    // 更新指令执行统计
+    if (interpreter.instructionProfile) {
+      instructionProfile.value = { ...interpreter.instructionProfile }
+    }
   }
 }
 
