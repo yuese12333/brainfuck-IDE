@@ -1,5 +1,14 @@
 # 🧠 Brainfuck IDE
 
+![Vue.js](https://img.shields.io/badge/Vue.js-4FC08D?style=flat-square&logo=vue.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.0.0-green?style=flat-square)
+![Maintained](https://img.shields.io/badge/Maintained-Yes-brightgreen?style=flat-square)
+![Brainfuck](https://img.shields.io/badge/Language-Brainfuck-red?style=flat-square)
+![IDE](https://img.shields.io/badge/Type-IDE-orange?style=flat-square)
+
 一个功能完整、现代化的 Brainfuck 语言集成开发环境，使用 Vue 3 + Vite 构建。
 
 ## 🎯 项目亮点
