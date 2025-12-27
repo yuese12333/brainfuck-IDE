@@ -60,6 +60,11 @@ npm run build
 npm run preview
 ```
 
+### 通过域名访问
+- 本项目已经部署到公网服务器，用户可以通过以下步骤访问：
+- 打开 http://www.brainfk-ide.cn
+
+
 ## 📖 Brainfuck 指令说明
 
 | 指令 | 说明 |
@@ -265,6 +270,11 @@ MIT License
 - 项目地址: [brainfuck-IDE](https://github.com/yuese12333/brainfuck-IDE)
 
 ---
+
+
+## 部署状态
+
+本项目已成功部署到公网服务器，并已通过域名对外提供服务，用户可以直接在浏览器中访问在线页面。若需获取完整的部署细节或运维记录，请联系项目维护者以获得私有文档访问权限。
 
 ⭐ 如果这个项目对你有帮助，请给个 Star！
 
