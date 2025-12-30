@@ -5,6 +5,9 @@
       <h1>Brainfuck IDE</h1>
     </div>
     <div class="header-actions">
+      <button @click="openGitHub" class="github-btn">
+        <span>📄</span> GitHub
+      </button>
       <button @click="showSettings" class="settings-btn">
         <span>⚙️</span> 设置
       </button>
@@ -121,7 +124,10 @@
           <!-- 速度档位设置 -->
           <div class="settings-section">
             <h3>速度档位配置</h3>
-            <p class="settings-desc">设置执行速度档位的延迟（毫秒）。<strong>注意：值越小速度越快！</strong></p>
+            <p class="settings-desc">设置执行速度档位的延迟（毫秒）。<strong>注意：值越小速度越快！最小为0.01ms</strong></p>
+            <p class="settings-desc speed-relationship">⚠️ 必须满足大小关系：快速 &lt; 中速 &lt; 慢速</p>
+            <p v-if="!isSpeedRelationshipValid" class="speed-error">❌ 当前速度档位关系不正确</p>
+            <p v-if="props.isRunning" class="running-warning">⚠️ 程序运行时无法修改速度设置</p>
             
             <div class="speed-settings">
               <div class="speed-setting-item">
@@ -129,9 +135,11 @@
                 <input 
                   type="number" 
                   v-model.number="settingsForm.speedLevels.fast"
-                  min="0"
+                  min="0.01"
                   max="1000"
+                  step="0.01"
                   class="speed-input"
+                  :disabled="props.isRunning"
                 />
                 <span class="unit">ms</span>
               </div>
@@ -140,9 +148,11 @@
                 <input 
                   type="number" 
                   v-model.number="settingsForm.speedLevels.medium"
-                  min="0"
+                  min="0.01"
                   max="1000"
+                  step="0.01"
                   class="speed-input"
+                  :disabled="props.isRunning"
                 />
                 <span class="unit">ms</span>
               </div>
@@ -151,9 +161,11 @@
                 <input 
                   type="number" 
                   v-model.number="settingsForm.speedLevels.slow"
-                  min="0"
+                  min="0.01"
                   max="1000"
+                  step="0.01"
                   class="speed-input"
+                  :disabled="props.isRunning"
                 />
                 <span class="unit">ms</span>
               </div>
@@ -194,13 +206,17 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { PRESET_SHORTCUTS } from '../utils/settings.js'
 
 const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  isRunning: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -215,6 +231,12 @@ const activeShortcutIndex = ref(-1) // 当前正在设置的快捷键索引
 const settingsForm = ref({
   shortcuts: [...props.settings.shortcuts],
   speedLevels: { ...props.settings.speedLevels }
+})
+
+// 检查速度档位关系是否正确
+const isSpeedRelationshipValid = computed(() => {
+  const { fast, medium, slow } = settingsForm.value.speedLevels
+  return fast < medium && medium < slow
 })
 
 const examples = [
@@ -317,10 +339,11 @@ const examples = [
   },
   {
     name: '性能测试',
-    description: '执行大量循环操作，测试解释器性能（约1亿次指令）',
+    description: '执行大量循环操作，测试解释器性能（约1亿次指令）。可在GitHub查看源码，尝试进一步优化性能',
     code: `# 性能测试程序
 # 执行多层嵌套循环，测试解释器的执行速度
 # 建议使用"最快"速度运行以观察IPS指标
+# 源码地址：https://github.com/yuese12333/brainfuck-ide
 
 ++++++++++[>++++++++[>++++++++++[>+++++++++[>+++++++++[>++++++++++[>++++++++++[>++++++++++<-]<-]<-]<-]<-]<-]<-]
 
@@ -358,6 +381,10 @@ const showHelp = () => {
 
 const showExamples = () => {
   examplesVisible.value = true
+}
+
+const openGitHub = () => {
+  window.open('https://github.com/yuese12333/brainfuck-ide', '_blank')
 }
 
 const loadExample = (example) => {
@@ -441,8 +468,14 @@ const saveSettings = () => {
   
   // 验证速度值
   const { fast, medium, slow } = settingsForm.value.speedLevels
-  if (fast < 0 || medium < 0 || slow < 0 || fast > 1000 || medium > 1000 || slow > 1000) {
-    alert('速度值必须在0-1000之间！')
+  if (fast < 0.01 || medium < 0.01 || slow < 0.01 || fast > 1000 || medium > 1000 || slow > 1000) {
+    alert('速度值必须在0.01-1000之间！')
+    return
+  }
+  
+  // 验证速度档位大小关系：快速 < 中速 < 慢速（值越小速度越快）
+  if (fast >= medium || medium >= slow) {
+    alert('速度档位大小关系不正确！\n应该满足：快速 < 中速 < 慢速\n（注意：值越小执行速度越快）')
     return
   }
   
@@ -487,7 +520,7 @@ const saveSettings = () => {
   gap: 10px;
 }
 
-.help-btn, .examples-btn, .settings-btn {
+.help-btn, .examples-btn, .settings-btn, .github-btn {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -495,8 +528,13 @@ const saveSettings = () => {
   padding: 8px 16px;
 }
 
-.help-btn span, .examples-btn span, .settings-btn span {
+.help-btn span, .examples-btn span, .settings-btn span, .github-btn span {
   font-size: 16px;
+}
+
+.github-btn:hover {
+  background: #333;
+  color: white;
 }
 
 /* 模态框样式 */
@@ -687,6 +725,33 @@ const saveSettings = () => {
   margin-bottom: 15px;
 }
 
+.speed-relationship {
+  color: var(--warning-color);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.speed-error {
+  color: var(--error-color);
+  font-size: 14px;
+  font-weight: 600;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: rgba(244, 135, 113, 0.1);
+  border: 1px solid var(--error-color);
+  border-radius: 4px;
+}
+
+.running-warning {
+  color: var(--warning-color);
+  font-size: 14px;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid var(--warning-color);
+  border-radius: 4px;
+}
+
 .shortcuts-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -792,6 +857,13 @@ const saveSettings = () => {
 .speed-input:focus {
   outline: none;
   border-color: var(--accent-color);
+}
+
+.speed-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
 }
 
 .unit {

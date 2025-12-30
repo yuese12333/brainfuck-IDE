@@ -48,6 +48,7 @@
             @click="setSpeed(0)"
             class="speed-btn"
             :class="{ active: executionSpeed === 0 }"
+            :disabled="isRunning"
           >
             ⚡ 最快
           </button>
@@ -55,6 +56,7 @@
             @click="setSpeed(speedLevels.fast)"
             class="speed-btn"
             :class="{ active: executionSpeed === speedLevels.fast }"
+            :disabled="isRunning"
           >
             🚀 快
           </button>
@@ -62,6 +64,7 @@
             @click="setSpeed(speedLevels.medium)"
             class="speed-btn"
             :class="{ active: executionSpeed === speedLevels.medium }"
+            :disabled="isRunning"
           >
             🚶 中
           </button>
@@ -69,6 +72,7 @@
             @click="setSpeed(speedLevels.slow)"
             class="speed-btn"
             :class="{ active: executionSpeed === speedLevels.slow }"
+            :disabled="isRunning"
           >
             🐌 慢
           </button>
@@ -208,5 +212,20 @@ const setSpeed = (speed) => {
   color: white;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+}
+
+.speed-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  transform: none;
+  box-shadow: none;
+}
+
+.speed-btn:disabled:hover {
+  background: var(--bg-secondary);
+  transform: none;
+  box-shadow: none;
 }
 </style>

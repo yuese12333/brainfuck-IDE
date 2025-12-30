@@ -2,6 +2,7 @@
   <div class="brainfuck-ide">
     <Header 
       :settings="settings"
+      :is-running="isRunning"
       @update-settings="updateSettings"
       @settings-open="isSettingsOpen = $event"
     />
@@ -270,10 +271,16 @@ const runCode = async () => {
           await new Promise(resolve => setTimeout(resolve, 0))
           runFrame() // 递归调用（或者你的外层 while 结构继续循环）
         } else {
-          // 程序结束，清理定时器
+          // 程序结束，清理定时器并设置完成状态
           if (ipsInterval) {
             clearInterval(ipsInterval)
             instructionsPerSecond.value = 0
+          }
+          // 修复bug：正确设置程序完成状态
+          if (interpreter.isFinished()) {
+            isRunning.value = false
+            isPaused.value = false
+            isCompleted.value = true
           }
         }
 
@@ -303,20 +310,38 @@ const runCode = async () => {
     // 启动
     runFrame()
   } else {
-    // 普通模式：每条指令更新UI
+    // 普通模式：批量执行+定时UI更新（优化性能）
+    // 对于极小的延迟值（<10ms），使用更大的批次以提高性能
+    let normalBatchSize
+    if (executionSpeed.value < 10) {
+      normalBatchSize = Math.max(10, Math.floor(50 / Math.max(executionSpeed.value, 0.01)))
+    } else {
+      normalBatchSize = Math.max(1, Math.floor(100 / executionSpeed.value))
+    }
+    
     while (isRunning.value && !interpreter.isFinished()) {
       try {
-        const result = interpreter.step()
-        updateState()
-        
-        // 检查是否命中断点
-        if (result === 'breakpoint') {
-          isPaused.value = true
-          isRunning.value = false
-          break
+        // 批量执行多条指令
+        let actualBatchSize = 0
+        for (let i = 0; i < normalBatchSize && !interpreter.isFinished(); i++) {
+          const result = interpreter.step()
+          actualBatchSize++
+          
+          // 检查是否命中断点
+          if (result === 'breakpoint') {
+            isPaused.value = true
+            isRunning.value = false
+            updateState() // 断点时立即更新UI
+            break
+          }
         }
         
-        await sleep(executionSpeed.value)
+        // 每批次后更新一次UI
+        updateState()
+        
+        // 根据实际执行的指令数量计算等待时间（修正速度逻辑）
+        const waitTime = executionSpeed.value * actualBatchSize
+        await sleep(waitTime)
       } catch (error) {
         output.value += `\n错误: ${error.message}`
         isRunning.value = false
@@ -463,10 +488,16 @@ const continueCode = async () => {
           await new Promise(resolve => setTimeout(resolve, 0))
           runFrame()
         } else {
-          // 程序结束，清理定时器
+          // 程序结束，清理定时器并设置完成状态
           if (continueIpsInterval) {
             clearInterval(continueIpsInterval)
             instructionsPerSecond.value = 0
+          }
+          // 修复bug：正确设置程序完成状态
+          if (interpreter.isFinished()) {
+            isRunning.value = false
+            isPaused.value = false
+            isCompleted.value = true
           }
         }
 
@@ -496,20 +527,38 @@ const continueCode = async () => {
     // 启动
     runFrame()
   } else {
-    // 普通模式
+    // 普通模式：批量执行+定时UI更新（优化性能）
+    // 对于极小的延迟值（<10ms），使用更大的批次以提高性能
+    let normalBatchSize
+    if (executionSpeed.value < 10) {
+      normalBatchSize = Math.max(10, Math.floor(50 / Math.max(executionSpeed.value, 0.01)))
+    } else {
+      normalBatchSize = Math.max(1, Math.floor(100 / executionSpeed.value))
+    }
+    
     while (isRunning.value && !interpreter.isFinished()) {
       try {
-        const result = interpreter.step()
-        updateState()
-        
-        // 检查是否命中断点
-        if (result === 'breakpoint') {
-          isPaused.value = true
-          isRunning.value = false
-          break
+        // 批量执行多条指令
+        let actualBatchSize = 0
+        for (let i = 0; i < normalBatchSize && !interpreter.isFinished(); i++) {
+          const result = interpreter.step()
+          actualBatchSize++
+          
+          // 检查是否命中断点
+          if (result === 'breakpoint') {
+            isPaused.value = true
+            isRunning.value = false
+            updateState() // 断点时立即更新UI
+            break
+          }
         }
         
-        await sleep(executionSpeed.value)
+        // 每批次后更新一次UI
+        updateState()
+        
+        // 根据实际执行的指令数量计算等待时间（修正速度逻辑）
+        const waitTime = executionSpeed.value * actualBatchSize
+        await sleep(waitTime)
       } catch (error) {
         output.value += `\n错误: ${error.message}`
         isRunning.value = false
